@@ -43,4 +43,23 @@ public class Sudoku {
 
         imwrite("output/dilate2.jpg", outerBox);
     }
+
+    private static void detectOutline(Mat outerBox) {
+        int count=0;
+        int max=-1;
+        Point maxPt;
+        outerBox.
+        for(int y=0;y<outerBox.size().height;y++) {
+            for(int x=0;x<outerBox.size().width;x++) {
+               double value = outerBox.get(x, y);
+                if(value >=128) {
+                    int area = floodFill(outerBox, Point(x,y), CV_RGB(0,0,64));
+                    if(area>max) {
+                        maxPt = Point(x,y);
+                        max = area;
+                    }
+                }
+            }
+        }
+    }
 }
