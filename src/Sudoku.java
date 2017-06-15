@@ -2,7 +2,6 @@ import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 
 import static org.opencv.core.Core.bitwise_not;
-import static org.opencv.core.CvType.CV_8UC;
 import static org.opencv.core.CvType.CV_8UC1;
 import static org.opencv.highgui.Highgui.imread;
 import static org.opencv.highgui.Highgui.imwrite;
@@ -42,24 +41,48 @@ public class Sudoku {
         dilate(outerBox, outerBox, kernel);
 
         imwrite("output/dilate2.jpg", outerBox);
+
+        detectOutline(outerBox);
+        imwrite("output/outline.jpg", outerBox);
     }
 
     private static void detectOutline(Mat outerBox) {
-        int count=0;
         int max=-1;
-        Point maxPt;
-        outerBox.
+        int maxPtX = 0;
+        int maxPtY = 0;
         for(int y=0;y<outerBox.size().height;y++) {
             for(int x=0;x<outerBox.size().width;x++) {
-               double value = outerBox.get(x, y);
-                if(value >=128) {
-                    int area = floodFill(outerBox, Point(x,y), CV_RGB(0,0,64));
+               double[] value = outerBox.get(y, x);
+                if(value != null && value[0] >=128) {
+                    Mat newOuterBox = Mat.zeros(outerBox.rows() + 2, outerBox.cols() + 2, CV_8UC1);
+                    int area = floodFill(outerBox, newOuterBox, new Point(x,y), new Scalar(64));
                     if(area>max) {
-                        maxPt = Point(x,y);
+                        maxPtX = x;
+                        maxPtY = y;
                         max = area;
                     }
                 }
             }
         }
+
+        imwrite("output/middle.jpg", outerBox);
+        System.out.println("max " + maxPtX + " " + maxPtY);
+
+        Mat mask = Mat.zeros(outerBox.rows() + 2, outerBox.cols() + 2, CV_8UC1);
+        floodFill(outerBox, mask, new Point(maxPtX,maxPtY), new Scalar(255));
+
+        for(int y=0;y<outerBox.size().height;y++) {
+            for(int x=0;x<outerBox.size().width;x++) {
+                double[] value = outerBox.get(y, x);
+                //System.out.print(value[0] + " ");
+                if(value != null && value[0] ==64 && x != maxPtX && y != maxPtY) {
+                    System.out.println("flood fill");
+                    Mat newOuterBox = Mat.zeros(outerBox.rows() + 2, outerBox.cols() + 2, CV_8UC1);
+                    floodFill(outerBox, newOuterBox, new Point(x,y), new Scalar(0));
+                }
+            }
+            System.out.println();
+        }
+
     }
 }
