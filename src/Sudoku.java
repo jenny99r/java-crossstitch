@@ -14,36 +14,29 @@ public class Sudoku {
     public static void main(String[] args) {
         System.out.println("Welcome to OpenCV " + Core.VERSION);
 
-        Mat sudoku = imread("sudoku.jpg", 0);
+        Mat image = imread("cross.jpg", 0);
 
-        Mat outerBox = new Mat(sudoku.size(), CV_8UC1);
-
-        Imgproc.GaussianBlur(sudoku, sudoku, new Size(11, 11), 0);
-
-        Imgproc.adaptiveThreshold(sudoku, outerBox, 255, Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY, 5, 2);
-
-        imwrite("output/afterthresh.jpg", outerBox);
-
-        bitwise_not(outerBox, outerBox);
-
-        imwrite("output/bitwise.jpg", outerBox);
-
-
-//        int data[] = {0, 1, 0, 1, 1, 1, 0, 1, 0};
-//        int row = 0;
-//        int col = 0;
-//        Mat kernel = new Mat(3, 3, CvType.CV_32S);
-//        kernel.put(row, col, data);
-
-
-        Mat kernel = getStructuringElement(MORPH_RECT, new Size(3, 3));
-
-        dilate(outerBox, outerBox, kernel);
+        Mat outerBox = initaliseImage(image);
 
         imwrite("output/dilate2.jpg", outerBox);
 
         detectOutline(outerBox);
         imwrite("output/outline.jpg", outerBox);
+    }
+
+    private static Mat initaliseImage(Mat image) {
+        Mat outerBox = new Mat(image.size(), CV_8UC1);
+
+        Imgproc.GaussianBlur(image, image, new Size(11, 11), 0);
+
+        Imgproc.adaptiveThreshold(image, outerBox, 255, Imgproc.ADAPTIVE_THRESH_MEAN_C, Imgproc.THRESH_BINARY, 5, 2);
+
+        bitwise_not(outerBox, outerBox);
+
+        Mat kernel = getStructuringElement(MORPH_RECT, new Size(3, 3));
+
+        dilate(outerBox, outerBox, kernel);
+        return outerBox;
     }
 
     private static void detectOutline(Mat outerBox) {
@@ -74,15 +67,11 @@ public class Sudoku {
         for(int y=0;y<outerBox.size().height;y++) {
             for(int x=0;x<outerBox.size().width;x++) {
                 double[] value = outerBox.get(y, x);
-                //System.out.print(value[0] + " ");
                 if(value != null && value[0] ==64 && x != maxPtX && y != maxPtY) {
-                    System.out.println("flood fill");
                     Mat newOuterBox = Mat.zeros(outerBox.rows() + 2, outerBox.cols() + 2, CV_8UC1);
                     floodFill(outerBox, newOuterBox, new Point(x,y), new Scalar(0));
                 }
             }
-            System.out.println();
         }
-
     }
 }
